@@ -160,9 +160,10 @@ plt.show()
 
 # ## First, re-check value counts for the target...you can see twice as many '0' values
 
-# In[287]:
+# In[466]:
 
 
+LLCP2.MENTHLTH2.value_counts().plot(kind='bar', title='Count (MENTHLTH2)');
 LLCP2['MENTHLTH2'].value_counts()
 
 
@@ -201,14 +202,16 @@ LLCP2_under.head()
 
 # ## Now let's use the new df (LLCP2_under) to model build, as before.
 
-# In[450]:
+# In[467]:
 
 
 #Full Model before backward elimination
 #X2 = LLCP2_under[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_DRNKWEK','_RFDRHV5','_PACAT1','PA1MIN_',
                  #'EXERANY2','_RFHLTH','_VEGESU1','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2',
                  #'POORHLTH','PHYSHLTH']].values
+        
 
+#FINAL model after backward elim: dropped '_INCOMG','_PACAT1','PA1MIN_','EXERANY2','_VEGESU1', and '_HCVU651'
 X2 = LLCP2_under[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_DRNKWEK','_RFDRHV5','EXERANY2','_RFHLTH','EMPLOY1',
                   'VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH']].values
 
