@@ -39,8 +39,8 @@ LLCP2.head()
 # In[3]:
 
 
-X = LLCP2[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_DRNKWEK','_RFDRHV5','EXERANY2','_RFHLTH','EMPLOY1',
-                  'VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH']].values
+X = LLCP2[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','_RFHLTH','_HCVU651','EMPLOY1',
+           'VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH']].values
 
 y = LLCP2['MENTHLTH2'].values
 
@@ -51,6 +51,12 @@ y = LLCP2['MENTHLTH2'].values
 from sklearn.model_selection import train_test_split
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+
+# describes info about train and test set 
+print("Number of rows/columns in X_test dataset: ", X_test.shape) 
+print("Number of rows/columns in y_test dataset: ", y_test.shape) 
+print("Number of rows/columns in X_train dataset: ", X_train.shape) 
+print("Number of rows/columns in y_train dataset: ", y_train.shape) 
 
 
 # ## Fit the model
@@ -120,58 +126,82 @@ print(LLCP2_under.MENTHLTH2.value_counts())
 LLCP2_under.MENTHLTH2.value_counts().plot(kind='bar', title='Count (MENTHLTH2)');
 
 
+# ### You can see above that we now have an equal amount of observations for both values of the target MENTHLTH2. We did lose a lot of information using this method, however, we still have a pretty large dataset to work with.
+
+# # Under-Sampled Model
+
 # ## Let's re-run the model now
 
 # In[10]:
 
 
-X = LLCP2_under[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_DRNKWEK','_RFDRHV5','EXERANY2','_RFHLTH','EMPLOY1',
-                  'VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH']].values
+X_under = LLCP2_under[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','_RFHLTH','_HCVU651','EMPLOY1',
+           'VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH']].values
 
-y = LLCP2_under['MENTHLTH2'].values
+y_under = LLCP2_under['MENTHLTH2'].values
 
 
 # In[11]:
 
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+X_train_under, X_test_under, y_train_under, y_test_under = train_test_split(X_under, y_under, test_size=0.3, random_state=0)
+
+# describes info about train and test set 
+print("Number of rows/columns in X_test_under dataset: ", X_test_under.shape) 
+print("Number of rows/columns in y_test_under dataset: ", y_test_under.shape) 
+print("Number of rows/columns in X_train_under dataset: ", X_train_under.shape) 
+print("Number of rows/columns in y_train_under dataset: ", y_train_under.shape) 
 
 
 # In[12]:
 
 
-classifier = RandomForestClassifier(n_estimators=200, random_state=0)
-classifier.fit(X_train, y_train)
-y_pred = classifier.predict(X_test)   #yields predicted class 0/1
-probs = classifier.predict_proba(X_test)
-probs = probs[:,1]    #yields probability of either class 0-1
+unique, counts = np.unique(y_train, return_counts=True)
+dict(zip(unique, counts))
 
 
 # In[13]:
 
 
-print(confusion_matrix(y_test,y_pred))
-print(classification_report(y_test,y_pred))
-print(accuracy_score(y_test, y_pred))
+unique, counts = np.unique(y_train_under, return_counts=True)
+dict(zip(unique, counts))
+
+
+# In[15]:
+
+
+classifier_under = RandomForestClassifier(n_estimators=200, random_state=0)
+classifier_under.fit(X_train_under, y_train_under)
+y_pred_under = classifier_under.predict(X_test_under)   #yields predicted class 0/1
+probs_under = classifier_under.predict_proba(X_test_under)
+probs_under = probs_under[:,1]    #yields probability of either class 0-1
+
+
+# In[16]:
+
+
+print(confusion_matrix(y_test_under,y_pred_under))
+print(classification_report(y_test_under,y_pred_under))
+print(accuracy_score(y_test_under, y_pred_under))
 
 
 # #### The accuracy score here is similar, but slightly better than the score for logistic regression (71% vs 70%). The score is lower than the previous RFC model using the unbalanced data, however, this model shows decent results for both classes.
 # 
 # ### Confusion matrix shows that:
-# #### True positive:    32382     _(We predicted a positive result and it was positive)_
-# #### True negative:    28272     _(We predicted a negative result and it was negative)_
-# #### False positive:   10323      _(We predicted a positive result and it was negative)_
-# #### False negative:   14631     _(We predicted a negative result and it was positive)_
+# #### True positive:    32648     _(We predicted a positive result and it was positive)_
+# #### True negative:    28229     _(We predicted a negative result and it was negative)_
+# #### False positive:   10057      _(We predicted a positive result and it was negative)_
+# #### False negative:   14674     _(We predicted a negative result and it was positive)_
 # 
 # ### So, this model makes more correct predictions, than not and the false negative rate seems a bit higher than the false positive
 
 # ## Now, let's run a ROC plot and get the area under the curve score (AUC)
 
-# In[14]:
+# In[17]:
 
 
-roc_auc = roc_auc_score(y_test, probs)
-fpr, tpr, thresholds = roc_curve(y_test, probs)
+roc_auc = roc_auc_score(y_test_under, probs_under)
+fpr, tpr, thresholds = roc_curve(y_test_under, probs_under)
 plt.figure(figsize=(20,10))
 plt.plot(fpr, tpr, label='Random Forest Classifier (area = %0.3f)' % roc_auc)
 plt.plot([0, 1], [0, 1],'r--')
@@ -187,6 +217,85 @@ print('AUC: %.3f' % roc_auc)
 
 
 # #### ROC for both the Random Forest Classifier and Logistic Regression were very similar. Both had Area Under the Curve (AUC) at .77. 
+
+# # Over-Sampled Model
+
+# ## Using SMOTE, we over-sample the minority class (MENTHLTH2 = 1) and take care to test/train split before preoceeding with re-sampling.
+
+# In[18]:
+
+
+from imblearn.over_sampling import SMOTE
+
+# setting up testing and training sets
+X_train3, X_test3, y_train3, y_test3 = train_test_split(X, y, test_size=0.3, random_state=0)
+
+sm = SMOTE(sampling_strategy='minority', random_state=0)
+X_train_over, y_train_over = sm.fit_sample(X_train3, y_train3)
+
+# describes info about train and test set 
+print("Number of rows/columns in X_test3 dataset: ", X_test3.shape) 
+print("Number of rows/columns in y_test3 dataset: ", y_test3.shape) 
+print("Number of rows/columns in X_train_over dataset: ", X_train_over.shape) 
+print("Number of rows/columns in y_train_over dataset: ", y_train_over.shape) 
+
+
+# In[19]:
+
+
+unique, counts = np.unique(y_train3, return_counts=True)
+dict(zip(unique, counts))
+
+
+# In[20]:
+
+
+unique, counts = np.unique(y_train_over, return_counts=True)
+dict(zip(unique, counts))
+
+
+# ### We can see above, we have 215,000 observations for each value of the target now in the training set. 
+# 
+# ### Let's run another Random Forest Classifier with this Over-Sampled data and compare.
+
+# In[21]:
+
+
+classifier_over = RandomForestClassifier(n_estimators=200, random_state=0)
+classifier_over.fit(X_train_under, y_train_under)
+y_pred_over = classifier_over.predict(X_test3)   #yields predicted class 0/1
+probs_over = classifier_over.predict_proba(X_test3)
+probs_over = probs_over[:,1]    #yields probability of either class 0-1
+
+
+# In[22]:
+
+
+print(confusion_matrix(y_test3,y_pred_over))
+print(classification_report(y_test3,y_pred_over))
+print(accuracy_score(y_test3, y_pred_over))
+
+
+# In[23]:
+
+
+roc_auc = roc_auc_score(y_test3, probs_over)
+fpr, tpr, thresholds = roc_curve(y_test3, probs_over)
+plt.figure(figsize=(20,10))
+plt.plot(fpr, tpr, label='Random Forest Classifier (area = %0.3f)' % roc_auc)
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.savefig('ROC')
+plt.show()
+print('AUC: %.3f' % roc_auc)
+
+
+# # We can see that this model is clearly the best so far. The accuracy is up to 79% and precision/recal for both values of the target are also highest for this model. The AUC of .85 beats the other three models all at .77. It seems that Random Forest Classifier may be better suited than Logistic Regression for over-sampled data. 
 
 # In[ ]:
 

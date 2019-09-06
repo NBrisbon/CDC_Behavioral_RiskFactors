@@ -94,12 +94,6 @@ data.shape
 # 
 # _# alcoholic drinks per week?_
 # 
-# __DRNK3GE5__
-# 
-# (0-76)
-# 
-# _"Considering all types of alcoholic beverages, how many times during the past 30 days did you have 5 or more drinks for men or 4 or more drinks for women on an occasion?_
-# 
 # ___RFDRHV5__ 
 # 
 # (1=no, 2=yes)
@@ -118,7 +112,7 @@ data.shape
 # 
 # (0-99999)
 # 
-# _"Minutes of total physical activity per week?"_
+# "Minutes of total physical activity per week?"
 # 
 # __EXERANY2__
 # 
@@ -136,11 +130,6 @@ data.shape
 # 
 # _General health status?_
 # 
-# ___VEGESU1__
-# 
-# (1-99998)
-# 
-# _"Total vegetables consumed each day?"_
 # 
 # __ADSLEEP__
 # 
@@ -244,29 +233,28 @@ data.shape
 
 # ### Create subset including only the variables listed above:
 
-# In[10]:
+# In[4]:
 
 
 pd.set_option('display.max_columns', 30)
 
-LLCP=data[['_STATE', 'SEX', '_AGE_G', '_BMI5CAT', '_EDUCAG', '_INCOMG', '_DRNKWEK', 'DRNK3GE5', 
-           '_RFDRHV5', '_PACAT1', 'PA1MIN_', 'EXERANY2', '_RFHLTH', '_VEGESU1', 'ADSLEEP', '_HCVU651', 
-           'EMPLOY1', 'VETERAN3', 'MARITAL', 'MARIJANA', 'ADDEPEV2', 'CIMEMLOS', 'LSATISFY', 'FIREARM4',
-           'POORHLTH', 'PHYSHLTH', 'MENTHLTH']]
+LLCP=data[['_STATE', 'SEX', '_AGE_G', '_BMI5CAT', '_EDUCAG', '_INCOMG', '_RFDRHV5', '_PACAT1', 'PA1MIN_', 
+           'EXERANY2', '_RFHLTH', 'ADSLEEP', '_HCVU651', 'EMPLOY1', 'VETERAN3', 'MARITAL', 'MARIJANA', 
+           'ADDEPEV2', 'CIMEMLOS', 'LSATISFY', 'FIREARM4','POORHLTH', 'PHYSHLTH', 'MENTHLTH']]
 
 LLCP.shape
 
 
 # ### Now, let's recode the variables as described above
 
-# In[11]:
+# In[5]:
 
 
 LLCP['SEX'].replace(2, 0, inplace=True)
 LLCP['SEX'].replace(9, np.nan, inplace=True)
 
 
-# In[12]:
+# In[6]:
 
 
 LLCP['_BMI5CAT'].replace('.', np.nan, inplace=True)
@@ -275,7 +263,7 @@ LLCP['_BMI5CAT'].replace(4, 1, inplace=True)
 LLCP['_BMI5CAT'].replace(2, 0, inplace=True)
 
 
-# In[13]:
+# In[7]:
 
 
 LLCP['_EDUCAG'].replace(9, np.nan, inplace=True)
@@ -285,27 +273,13 @@ LLCP['_EDUCAG'].replace(3, 0, inplace=True)
 LLCP['_EDUCAG'].replace(4, 1, inplace=True)
 
 
-# In[14]:
+# In[8]:
 
 
 LLCP['_INCOMG'].replace(9, np.nan, inplace=True)
 
 
-# In[15]:
-
-
-LLCP['_DRNKWEK'].replace(99900, np.nan, inplace=True)
-
-
-# In[16]:
-
-
-LLCP['DRNK3GE5'].replace(88, 0, inplace=True)
-LLCP['DRNK3GE5'].replace(77, np.nan, inplace=True)
-LLCP['DRNK3GE5'].replace(99, np.nan, inplace=True)
-
-
-# In[17]:
+# In[9]:
 
 
 LLCP['_RFDRHV5'].replace(9, np.nan, inplace=True)
@@ -313,13 +287,13 @@ LLCP['_RFDRHV5'].replace(1, 0, inplace=True)
 LLCP['_RFDRHV5'].replace(2, 1, inplace=True)
 
 
-# In[18]:
+# In[10]:
 
 
 LLCP['_PACAT1'].replace(9, np.nan, inplace=True)
 
 
-# In[19]:
+# In[11]:
 
 
 LLCP['EXERANY2'].replace(7, np.nan, inplace=True)
@@ -327,14 +301,14 @@ LLCP['EXERANY2'].replace(9, np.nan, inplace=True)
 LLCP['EXERANY2'].replace(2, 0, inplace=True)
 
 
-# In[20]:
+# In[12]:
 
 
 LLCP['_RFHLTH'].replace(9, np.nan, inplace=True)
 LLCP['_RFHLTH'].replace(2, 0, inplace=True)
 
 
-# In[21]:
+# In[13]:
 
 
 LLCP['ADSLEEP'].replace(88, 0, inplace=True)
@@ -342,14 +316,14 @@ LLCP['ADSLEEP'].replace(77, np.nan, inplace=True)
 LLCP['ADSLEEP'].replace(99, np.nan, inplace=True)
 
 
-# In[22]:
+# In[14]:
 
 
 LLCP['_HCVU651'].replace(9, np.nan, inplace=True)
 LLCP['_HCVU651'].replace(2, 0, inplace=True)
 
 
-# In[23]:
+# In[15]:
 
 
 LLCP['EMPLOY1'].replace(9, np.nan, inplace=True)
@@ -362,7 +336,7 @@ LLCP['EMPLOY1'].replace(7, 0, inplace=True)
 LLCP['EMPLOY1'].replace(8, 0, inplace=True)
 
 
-# In[24]:
+# In[16]:
 
 
 LLCP['VETERAN3'].replace(7, np.nan, inplace=True)
@@ -370,7 +344,7 @@ LLCP['VETERAN3'].replace(9, np.nan, inplace=True)
 LLCP['VETERAN3'].replace(2, 0, inplace=True)
 
 
-# In[25]:
+# In[17]:
 
 
 LLCP['MARITAL'].replace(9, np.nan, inplace=True)
@@ -381,7 +355,7 @@ LLCP['MARITAL'].replace(5, 0, inplace=True)
 LLCP['MARITAL'].replace(6, 0, inplace=True)
 
 
-# In[26]:
+# In[18]:
 
 
 LLCP['MARIJANA'].replace(88, 0, inplace=True)
@@ -389,7 +363,7 @@ LLCP['MARIJANA'].replace(77, np.nan, inplace=True)
 LLCP['MARIJANA'].replace(99, np.nan, inplace=True)
 
 
-# In[27]:
+# In[19]:
 
 
 LLCP['ADDEPEV2'].replace(2, 0, inplace=True)
@@ -397,7 +371,7 @@ LLCP['ADDEPEV2'].replace(7, np.nan, inplace=True)
 LLCP['ADDEPEV2'].replace(9, np.nan, inplace=True)
 
 
-# In[28]:
+# In[20]:
 
 
 LLCP['CIMEMLOS'].replace(7, np.nan, inplace=True)
@@ -405,7 +379,7 @@ LLCP['CIMEMLOS'].replace(9, np.nan, inplace=True)
 LLCP['CIMEMLOS'].replace(2, 0, inplace=True)
 
 
-# In[38]:
+# In[21]:
 
 
 LLCP['LSATISFY'].replace(7, np.nan, inplace=True)
@@ -415,7 +389,7 @@ LLCP['LSATISFY'].replace(3, 0, inplace=True)
 LLCP['LSATISFY'].replace(4, 0, inplace=True)
 
 
-# In[30]:
+# In[22]:
 
 
 LLCP['FIREARM4'].replace(7, np.nan, inplace=True)
@@ -423,7 +397,7 @@ LLCP['FIREARM4'].replace(9, np.nan, inplace=True)
 LLCP['FIREARM4'].replace(2, 0, inplace=True)
 
 
-# In[31]:
+# In[23]:
 
 
 LLCP['POORHLTH'].replace(88, 0, inplace=True)
@@ -431,7 +405,7 @@ LLCP['POORHLTH'].replace(77, np.nan, inplace=True)
 LLCP['POORHLTH'].replace(99, np.nan, inplace=True)
 
 
-# In[32]:
+# In[24]:
 
 
 LLCP['PHYSHLTH'].replace(88, 0, inplace=True)
@@ -439,7 +413,7 @@ LLCP['PHYSHLTH'].replace(77, np.nan, inplace=True)
 LLCP['PHYSHLTH'].replace(99, np.nan, inplace=True)
 
 
-# In[33]:
+# In[25]:
 
 
 LLCP['MENTHLTH'].replace(88, 0, inplace=True)
@@ -447,7 +421,7 @@ LLCP['MENTHLTH'].replace(77, np.nan, inplace=True)
 LLCP['MENTHLTH'].replace(99, np.nan, inplace=True)
 
 
-# In[34]:
+# In[26]:
 
 
 LLCP['MENTHLTH2']=LLCP['MENTHLTH']
@@ -458,7 +432,7 @@ LLCP.loc[LLCP['MENTHLTH2'] > 0, 'MENTHLTH2'] = 1
 
 # #### Let's make sure all value types are appropriate. *They are*
 
-# In[35]:
+# In[27]:
 
 
 LLCP.dtypes
@@ -466,7 +440,7 @@ LLCP.dtypes
 
 # #### There are many NaN values seen in the above summary output, so let's get a number of NaN for each column. We can see that there are a very high number of missing values for a few columns, such as LSATISFY.
 
-# In[39]:
+# In[28]:
 
 
 LLCP.isnull().sum()
@@ -474,13 +448,13 @@ LLCP.isnull().sum()
 
 # #### Let's look at the summary stats
 
-# In[40]:
+# In[29]:
 
 
 LLCP.describe()
 
 
-# #### Let's look at our two target/dependent variables, to see if they look correct. It looks like the created binary variable is accurate. We can also see that most people report experiencing no poor mental health days. That's good!
+# #### Let's look at our two target/dependent variables, to see if they look correct. It looks like the created binary variable is accurate. We can also see that most people report experiencing no poor mental health days. That's good, though the data will likely be imbalanced., but we can address that later.
 
 # In[43]:
 
@@ -496,7 +470,7 @@ sns.distplot(LLCP['MENTHLTH2'], kde=False, bins=10);
 
 # ### Let's visualize the missing data, because we will need to address this
 
-# In[61]:
+# In[30]:
 
 
 get_ipython().system('pip install missingno')
@@ -507,18 +481,18 @@ msno.matrix(LLCP)
 
 # #### The above visualization shows all missing data as white area. You can see there are a few variables that are almost all missing data.
 
-# #### We could drop all rows with missing data, but this would lead to far more data loss than would be acceptable. For the columns with some missing data, we can impute values based on the mean or mediam for the column. We can't do this for the columns with almost all missing, because almost all values would be imputed. So, we'll drop those from the analysis entirely. This is a shame, because variables such as Life Satisfaction and Sleep Quality are typically highly related to mental health. Oh well...
+# #### We could drop all rows with missing data, but this would lead to far more data loss than would be acceptable. For the columns with some missing data, we can impute values based on the mean or median for the column. We can't do this for the columns with almost all missing, because almost all values would be imputed. So, we'll drop those from the analysis entirely. This is a shame, because variables such as Life Satisfaction and Sleep Quality are typically highly related to mental health. Oh well...
 
 # ### Let's make a new dataframe with only the columns we can work with. I'm getting rid of State as well, though I may look at Massachusetts in isolation later.
 
-# In[46]:
+# In[31]:
 
 
-LLCP2 = LLCP[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_DRNKWEK','_RFDRHV5','_PACAT1','PA1MIN_','EXERANY2','_RFHLTH','_VEGESU1','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH','MENTHLTH','MENTHLTH2']]
+LLCP2 = LLCP[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','PA1MIN_','EXERANY2','_RFHLTH','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH','MENTHLTH','MENTHLTH2']]
 LLCP2.shape
 
 
-# In[47]:
+# In[32]:
 
 
 msno.matrix(LLCP2)
@@ -526,7 +500,7 @@ msno.matrix(LLCP2)
 
 # ### Check the total number of values in each column, the mean, and SD, before and after imputing. We want to make sure the mean/SD don't change too much...they shouldn't.
 
-# In[48]:
+# In[33]:
 
 
 LLCP2.describe()
@@ -534,16 +508,16 @@ LLCP2.describe()
 
 # ### Let's now impute for missing values
 
-# In[54]:
+# In[34]:
 
 
 from sklearn.impute import SimpleImputer
 #from sklearn.preprocessing import Imputer
 imputer = SimpleImputer(missing_values=np.nan, strategy='median')#, axis=0)
-LLCP2[['SEX','_BMI5CAT','_EDUCAG','_INCOMG','_DRNKWEK','_RFDRHV5','_PACAT1','PA1MIN_','EXERANY2','_RFHLTH','_VEGESU1','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH','MENTHLTH','MENTHLTH2']]=imputer.fit_transform(LLCP2[['SEX','_BMI5CAT','_EDUCAG','_INCOMG','_DRNKWEK','_RFDRHV5','_PACAT1','PA1MIN_','EXERANY2','_RFHLTH','_VEGESU1','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH','MENTHLTH','MENTHLTH2']])
+LLCP2[['SEX','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','PA1MIN_','EXERANY2','_RFHLTH','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH','MENTHLTH','MENTHLTH2']]=imputer.fit_transform(LLCP2[['SEX','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','PA1MIN_','EXERANY2','_RFHLTH','_HCVU651','EMPLOY1','VETERAN3','MARITAL','ADDEPEV2','POORHLTH','PHYSHLTH','MENTHLTH','MENTHLTH2']])
 
 
-# In[55]:
+# In[35]:
 
 
 LLCP2.describe()
@@ -551,7 +525,7 @@ LLCP2.describe()
 
 # #### We see above that most variables remained close to the original mean/SD. The POORHLTH changed a bit more, but let's roll with it for now (mean from 5.3 to 2.7).
 
-# In[56]:
+# In[36]:
 
 
 msno.matrix(LLCP2)
@@ -561,7 +535,7 @@ msno.matrix(LLCP2)
 
 # ### Let's save the dataframe as a .csv and move on to exploratory analysis and feature selection....
 
-# In[58]:
+# In[37]:
 
 
 LLCP2.to_csv(r'C:\Users\Nick\Desktop\GitProjects\LLCP_Project\LLCP2.csv',header=True, index=None)
