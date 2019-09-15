@@ -1,9 +1,12 @@
-# CDC Behavioral RiskFactors
-## Behavioral Risk Factor Surveillance System
+# Predicting Mental Health Problems
 
-The 2017 BRFSS data continues to reflect the changes initially made in 2011 in weighting methodology (raking) and the addition of cell phone only respondents. The aggregate BRFSS combined landline and cell phone dataset is built from the landline and cell phone data submitted for 2017 and includes data for 50 states, the District of Columbia, Guam, and Puerto Rico.
+## 1.0 Introduction
+For health-care providers who lack psychiatric training, it can be difficult to effectively assess whether or not a patient may benefit from mental health services. Self-report assessments, such as the Beck Depression Inventory (BDI) or the Patient Health Questionnaire (PHQ)-9, are available to providers who wish to screen for depression and other psychological disorders. However, not all providers engage in these screenings and many people who are suffering end up without treatment. The purpose of this project was to develop a way that health-care providers could assess need for mental health services, based on demographics and general health-related questions.  
 
-There are 450,016 records for 2017.
+## 2.0 Data
+## Behavioral Risk Factor Surveillance System (BRFSS) by Centers for Disease Control and Prevention (CDC)
+
+The Behavioral Risk Factor Surveillance System (BRFSS) is the nation’s premier system of health-related telephone surveys that collect state data about U.S. residents regarding their health-related risk behaviors, chronic health conditions, and use of preventive services. The aggregate BRFSS combined landline and cell phone dataset is built from the landline and cell phone data submitted for 2017 and includes data for 50 states, the District of Columbia, Guam, and Puerto Rico. For 2017, there were 450,016 records and 358 total variables.
 
 The website is: https://www.cdc.gov/brfss/annual_data/annual_2017.html
 
@@ -11,8 +14,76 @@ Codebook for all variables is here: https://www.cdc.gov/brfss/annual_data/2017/p
 
 Codebook for calculated variables is here: https://www.cdc.gov/brfss/annual_data/2017/pdf/codebook17_llcp-v2-508.pdf
 
-## Analysis TLDR (I'll be running different models, but here we are so far): 
-After cleaning/exploring the data and selecting the features, I decided to use those features to predict whether or not someone would self-report any days of poor mental health over a 30-day period. Essentially, the models predict risk for mental health problems. The features (predictors) were: gender, age, body mass index, income, education, heavy alcohol use, physical activity, general health status, employment, veteran status, marital status, previous diagnosis of depression, and physical health. I plan to run more classification and regression models. So far, the Random Forest Classifier model performed slightly better than all other models (Logistic Regression, KNN, SVM, and Gradient Boost), with an average 73% accuracy score and an area under the curve (AUC) of .81.
+## 3.0 Methodology
+
+There were 22 variables chosen from the BRFSS dataset that have been shown to have associations with mental health, such as sleep quality, physical activity, and general health status. After exploratory analyses and feature selection, there were 15 variables selected for predictive modeling. The target (dependent) variable was a question asking on how many days over the past month did a person experience any type of mental health problems. This was recoded into a binary variable (0 = No mental health problems; 1 = any reported mental health problems). This binary target, along with the 15 feature variables, were included in a series of classification algorithms. Models conducted included Logistic Regression, Random Forest Classification, K-Nearest Neighbors, Support Vector Machines, and Gradient Boost. Out of these, the Random Forest Classifier performed best and will be presented below. 
+
+## 3.1 Features
+
+SEX (0=female, 1=male)
+
+_AGE_G (Age: 1=18-24, 2=25-34, 3=35-44, 4=45-54, 5=55-64, 6=65+)
+
+_BMI5CAT (BMI: 0=normal weight, 1=under/over-weight/obese)
+
+_EDUCAG (Eduction: 0=<college grad, 1=college grad)
+
+_INCOMG (Income: 1=<15k, 2=15-25k, 3=25-35k, 4=35-50k, 5=50k+)
+
+_RFDRHV5 (Heavy Alcohol Consumption?: 0=no, 1=yes)
+
+_PACAT1 (Physical activity: 1=highly active, 2=active, 3=insufficiently active, 4=inactive)
+
+_RFHLTH (General Health Status: 0=poor health, 1=good health)
+
+_HCVU651 (Access to Healthcare: 0=don't have, 1=have)
+
+EMPLOY1 (Employment: 0=unemployed/homemaker/retired, 1=employed/student)
+
+VETERAN3 (Veteran: 0=no, 1=yes)
+
+MARITAL (Marital Status: 0=unmarried, 1=married)
+
+ADDEPEV2 (Previous Diagnosis of Depression: 0=no, 1=yes)
+
+POORHLTH (how many days did poor physical or mental health keep you from doing your usual activities: 0-30 days)
+
+PHYSHLTH (how many days during the past 30 days was your physical health not good?": 0-30 days not good)
+
+## 3.2 Target
+
+MENTHLTH2 (0=zero poor mental health days, 1=1-30 poor mental health days
+
+This was a newly created binary variable from the above MENTHLTH continuous variable. All values indicting any number of reported days with poor mental health coded as '1', otherwise, no poor mental health days coded as '0'.
+
+## 3.3 Imbalanced Data
+
+As is the case with many health-related datasets, the present data was highly imbalanced. For the target variable, there were over twice as many participants reporting good mental health status, compared to those reporting experiences of poor mental health. Thus, the models were quite good at predicting "good mental health", but not "poor mental health", which is the opposite of what we wanted. To remedy this, we tried numerous methods of resampling to balance the data and settled on random under-sampling, as it performed best. Initially, the counts for the target variable were ('Good Mental Health' = 307337; 'Poor Mental Health' = 142679), and after under-sampling ('Good Mental Health' = 142,679; 'Poor Mental Health' = 142679). There was information loss with this method, which is a drawback of under-sampling. Despite this, we were still left with a considerable amount of observations for analysis. 
+
+## 3.4 Analyses
+
+As mentioned previously, a number of classification algorithms were fit, of which the Random Forest Classification (RFC) algorithm performed best. Three models were run and will be shown below. All models included all 15 features.
+
+### Baseline Model:
+A baseline model using the data prior to resampling and with all default settings for RFC options.
+
+### Under-Sampled Model:
+Identical to the baseline model, except this used the under-sampled data.
+
+### Final Model:
+This was our final model, using the resampled data and with all hyper-parameters tuned. 
+
+## 4.0 Results
+
+## 4.1 Confusion Matrix
+
+Shown below, are the confusion matrices for the three models. You can see that the Baseline Model, due to imbalanced data, shows a significant difference in the true possitie and true negative rates. The model with imbalanced data is great at predicting when someone will report 'Good Mental Health', but not nearly as good at predicting problems with mental health, which is the purpose of this project. The Under-Sampled Model improves on this and the Final Model improves even further. 
+
+## 4.3 Classification Accuracy
+
+The highest accuracy score was achieved with the Baseline Model, though this is misleading because of the imbalanced data prior to resampling. The precision and recall scores for class 1 of the target ('Poor Mental Health') are very low for the Baseline Model. Both precision and recall scores balance out considerably with the Under-Sampled Model and improve further in the Final Model. Sensitivity and Specificity also improve with each model, as does 
+
+
 
 Not bad, considering the models are predicting mental health probelms with mainly demographic and general health features. I suspect the model would have performed even better if we were able to use the 'sleep quality' and 'life satisfaction' features. This was not possible due to excessive missing data for those variables. Oh well....
 
