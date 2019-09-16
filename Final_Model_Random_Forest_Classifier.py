@@ -36,11 +36,19 @@ from sklearn import metrics
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from matplotlib import pyplot
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix
+
+
+# In[2]:
+
+
+get_ipython().run_cell_magic('javascript', '', 'IPython.OutputArea.auto_scroll_threshold = 9999;')
 
 
 # ## Read in the data
 
-# In[2]:
+# In[3]:
 
 
 pd.set_option('display.max_columns', 50)
@@ -50,7 +58,7 @@ LLCP2.describe()
 
 # # 1. Baseline RFC Model:
 
-# In[16]:
+# In[4]:
 
 
 # Split data by features and target
@@ -60,7 +68,7 @@ X = LLCP2[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','_
 y = LLCP2['MENTHLTH2'].values
 
 
-# In[17]:
+# In[5]:
 
 
 # Complete a 70/30 train-test-split
@@ -73,7 +81,7 @@ print("Number of rows/columns in X_train dataset: ", X_train.shape)
 print("Number of rows/columns in y_train dataset: ", y_train.shape) 
 
 
-# In[25]:
+# In[6]:
 
 
 # Default options for RFC
@@ -92,33 +100,28 @@ probs = RFC_baseline.predict_proba(X_test)
 probs = probs[:,1]
 
 
-# In[26]:
+# In[7]:
 
 
-# ---CHECK ACCURACY---
-
-print("=== Confusion Matrix ===")
-print(confusion_matrix(y_test, y_pred))
-print('\n')
-print("=== Classification Report ===")
-print(classification_report(y_test, y_pred))
-print('\n')
+from sklearn.model_selection import cross_val_score
 from sklearn import metrics
-
-# Model Accuracy, how often is the classifier correct?
-print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
-print("F1_score:",metrics.f1_score(y_test, y_pred))
-print("Recall_score:",metrics.recall_score(y_test, y_pred))
-print("AUC score:",metrics.roc_auc_score(y_test, probs))
-precision, recall, thresholds = metrics.precision_recall_curve(y_test, y_pred)
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import f1_score
+from sklearn.metrics import auc
+from sklearn.metrics import average_precision_score
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-plt.plot(recall, precision, marker='.')
-from sklearn.metrics import confusion_matrix
-confusion = confusion_matrix(y_test, y_pred)
-print(confusion)
+############################################################################################################
+# CLASSIFICATION REPORT ###
 
+print('\n')
+print("=== CLASSIFICATION REPORT ===")
+print(classification_report(y_test, y_pred))
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+print("ROC AUC score:",metrics.roc_auc_score(y_test, probs))
+
+confusion = confusion_matrix(y_test, y_pred)
 # True Positives
 TP = confusion[1, 1]
 # True Negatives
@@ -127,9 +130,108 @@ TN = confusion[0, 0]
 FP = confusion[0, 1]
 # False Negatives
 FN = confusion[1, 0]
-print("Sensitivity",TP / float(TP + FN))
-print("Specificity",TN / float(TN + FP))
-print("Precision",TP / float(TP + FP))
+print("Sensitivity:",TP / float(TP + FN))
+print("Specificity:",TN / float(TN + FP))
+print("Precision:",TP / float(TP + FP))
+print('\n')
+
+#####################################################################################################
+# CONFUSION MATRIX
+
+import itertools
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion Matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    Source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    # Plot the confusion matrix
+    plt.figure(figsize = (8, 8))
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title, size = 25)
+    plt.colorbar(aspect=5)
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45, size = 12)
+    plt.yticks(tick_marks, classes, size = 12)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    
+    # Labeling the plot
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt), fontsize = 20,
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+        
+    plt.grid(False)
+    plt.tight_layout()
+    plt.ylabel('Actual label', size = 15)
+    plt.xlabel('Predicted label', size = 15)
+    plt.ylim([1.5, -.5])
+    
+cm = confusion_matrix(y_test, y_pred)
+plot_confusion_matrix(cm, classes = ['Good Mental Health', 'Poor Mental Health'],
+                      title = 'Confusion Matrix')
+
+
+############################################################################################
+# ROC CURVE PLOT
+
+roc_auc = roc_auc_score(y_test, probs)
+fpr, tpr, thresholds = roc_curve(y_test, probs)
+plt.figure(figsize=(15,10))
+plt.plot(fpr, tpr, label='Baseline Model (AUC = %0.3f)' % roc_auc, color='midnightblue')
+#plt.fill_between(fpr, tpr, alpha=0.2, color='orange', **step_kwargs)
+
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate', size = 15)
+plt.ylabel('True Positive Rate', size = 15)
+plt.title('Receiver Operating Characteristic (ROC Curve)', size = 25)
+plt.legend(loc="lower right")
+plt.savefig('ROC')
+plt.show()
+
+###########################################################################################
+# PRECISION-RECALL CURVE
+
+from sklearn.metrics import precision_recall_curve
+import matplotlib.pyplot as plt
+from inspect import signature
+from sklearn.metrics import average_precision_score
+
+average_precision = average_precision_score(y_test, probs)
+
+precision, recall, _ = precision_recall_curve(y_test, probs)
+
+step_kwargs = ({'step': 'post'}
+               if 'step' in signature(plt.fill_between).parameters
+               else {})
+
+plt.figure(figsize=(15,10))
+plt.step(recall, precision, color='navy', alpha=0.7,
+         where='post', label='Baseline Model (AP = %0.3f)' % average_precision)
+plt.fill_between(recall, precision, alpha=0.7, color='navy', **step_kwargs)
+
+plt.xlabel('Recall', size=15)
+plt.ylabel('Precision', size=15)
+plt.ylim([0.0, 1.05])
+plt.xlim([0.0, 1.0])
+plt.title('Precision-Recall Curve', size=25)
+plt.legend()
+plt.show()
 
 
 # # Dealing with imbalanced data:
@@ -142,7 +244,7 @@ print("Precision",TP / float(TP + FP))
 # 
 # ### There are various re-sampling methods for dealing with unbalanced data. We will utilize the 'Under-Sampling' technique. This technique drops rows at random from the 'majority class', or the over-represented value. In this case, the '0' rows will be dropped at random until both value's are equal. This can lead to a loss of information, if there is not enough data. Since we have almost 500,000 total rows, this should not be a significant problem. I also tried adjusting class_weight in the baseline model and also used SMOTE-NC for Over-Sampling, however, the Under-Sampling provided the best results.
 
-# In[27]:
+# In[8]:
 
 
 # Check value counts for each class of the target
@@ -152,7 +254,7 @@ LLCP2['MENTHLTH2'].value_counts()
 
 # ### There are roughly twice as many value counts for the target in 'class 0' compared with 'class 1'...this is why the previous model was better at predicting 'class 0'. We'll now use under-sampling to balance the data.
 
-# In[28]:
+# In[9]:
 
 
 # Class count
@@ -163,7 +265,7 @@ Good_MH = LLCP2[LLCP2['MENTHLTH2'] == 0]
 Poor_MH = LLCP2[LLCP2['MENTHLTH2'] == 1]
 
 
-# In[29]:
+# In[10]:
 
 
 Good_MH_under = Good_MH.sample(count_class_1)
@@ -181,7 +283,7 @@ LLCP2_under.MENTHLTH2.value_counts().plot(kind='bar', title='Count (MENTHLTH2)')
 
 # ## Let's re-run the same model now, using the under-sampled data
 
-# In[30]:
+# In[11]:
 
 
 X_under = LLCP2_under[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5','_PACAT1','_RFHLTH','_HCVU651','EMPLOY1',
@@ -190,7 +292,7 @@ X_under = LLCP2_under[['SEX','_AGE_G','_BMI5CAT','_EDUCAG','_INCOMG','_RFDRHV5',
 y_under = LLCP2_under['MENTHLTH2'].values
 
 
-# In[31]:
+# In[12]:
 
 
 # 70/30 train-test split
@@ -203,7 +305,7 @@ print("Number of rows/columns in X_train_under dataset: ", X_train_under.shape)
 print("Number of rows/columns in y_train_under dataset: ", y_train_under.shape) 
 
 
-# In[32]:
+# In[13]:
 
 
 # Check the unique counts for the target classes
@@ -211,7 +313,7 @@ unique, counts = np.unique(y_train_under, return_counts=True)
 dict(zip(unique, counts))
 
 
-# In[33]:
+# In[14]:
 
 
 # ---UNDER-SAMPLED MODEL---
@@ -223,48 +325,135 @@ probs_under = RFC_under.predict_proba(X_test_under)
 probs_under = probs_under[:,1]    #yields probability of either class 0-1
 
 
-# In[34]:
+# In[15]:
 
-
-# ---CHECK ACCURACY---
 
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import classification_report, confusion_matrix
-
-print("=== Confusion Matrix ===")
-print(confusion_matrix(y_test_under, y_pred_under))
-print('\n')
-print("=== Classification Report ===")
-print(classification_report(y_test_under, y_pred_under))
-print('\n')
 from sklearn import metrics
-
-# Model Accuracy, how often is the classifier correct?
-print("Accuracy:",metrics.accuracy_score(y_test_under, y_pred_under))
-print("F1_score:",metrics.f1_score(y_test_under, y_pred_under))
-print("Recall_score:",metrics.recall_score(y_test_under, y_pred_under))
-print("AUC score:",metrics.roc_auc_score(y_test_under, probs_under))
-print("Log Loss:",metrics.log_loss(y_test_under, y_pred_under, eps=1e-15))
-precision, recall, thresholds = metrics.precision_recall_curve(y_test_under, y_pred_under)
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import f1_score
+from sklearn.metrics import auc
+from sklearn.metrics import average_precision_score
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-plt.plot(recall, precision, marker='.')
-from sklearn.metrics import confusion_matrix
-confusion = confusion_matrix(y_test_under, y_pred_under)
-print(confusion)
+############################################################################################################
+# CLASSIFICATION REPORT ###
 
+print('\n')
+print("=== CLASSIFICATION REPORT ===")
+print(classification_report(y_test_under, y_pred_under))
+print("Accuracy:",metrics.accuracy_score(y_test_under, y_pred_under))
+print("ROC AUC score:",metrics.roc_auc_score(y_test_under, probs_under))
+
+confusion1 = confusion_matrix(y_test_under, y_pred_under)
 # True Positives
-TP = confusion[1, 1]
+TP_under = confusion1[1, 1]
 # True Negatives
-TN = confusion[0, 0]
+TN_under = confusion1[0, 0]
 # False Positives
-FP = confusion[0, 1]
+FP_under = confusion1[0, 1]
 # False Negatives
-FN = confusion[1, 0]
-print("Sensitivity",TP / float(TP + FN))
-print("Specificity",TN / float(TN + FP))
-print("Precision",TP / float(TP + FP))
+FN_under = confusion1[1, 0]
+print("Sensitivity:",TP_under / float(TP_under + FN_under))
+print("Specificity:",TN_under / float(TN_under + FP_under))
+print("Precision:",TP_under / float(TP_under + FP_under))
+
+#####################################################################################################
+# CONFUSION MATRIX
+
+print('\n')
+import itertools
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion Matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    Source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    """
+
+    # Plot the confusion matrix
+    plt.figure(figsize = (8, 8))
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title, size = 25)
+    plt.colorbar(aspect=5)
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45, size = 12)
+    plt.yticks(tick_marks, classes, size = 12)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    
+    # Labeling the plot
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt), fontsize = 20,
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+        
+    plt.grid(False)
+    plt.tight_layout()
+    plt.ylabel('Actual label', size = 15)
+    plt.xlabel('Predicted label', size = 15)
+    plt.ylim([1.5, -.5])
+
+cm = confusion_matrix(y_test_under, y_pred_under)
+plot_confusion_matrix(cm, classes = ['Good Mental Health', 'Poor Mental Health'],
+                      title = 'Confusion Matrix')
+plt.show()
+############################################################################################
+# ROC CURVE PLOT
+
+roc_auc_under = roc_auc_score(y_test_under, probs_under)
+fpr_under, tpr_under, thresholds = roc_curve(y_test_under, probs_under)
+plt.figure(figsize=(15,10))
+plt.plot(fpr, tpr, label='Baseline Model (AUC = %0.3f)' % roc_auc, color='midnightblue')
+#plt.fill_between(fpr, tpr, alpha=0.2, color='midnightblue', **step_kwargs)
+plt.plot(fpr_under, tpr_under, label='Under-Sampled Model (AUC = %0.3f)' % roc_auc_under, color='royalblue')
+#plt.fill_between(fpr_under, tpr_under, alpha=0.2, color='royalblue', **step_kwargs)
+
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate', size = 15)
+plt.ylabel('True Positive Rate', size = 15)
+plt.title('Receiver Operating Characteristic (ROC Curve)', size = 25)
+plt.legend(loc="lower right")
+plt.show()
+
+###########################################################################################
+# PRECISION-RECALL CURVE
+
+from sklearn.metrics import precision_recall_curve
+import matplotlib.pyplot as plt
+from inspect import signature
+from sklearn.metrics import average_precision_score
+
+average_precision_under = average_precision_score(y_test_under, probs_under)
+
+precision_under, recall_under, _ = precision_recall_curve(y_test_under, probs_under)
+
+step_kwargs = ({'step': 'post'}
+               if 'step' in signature(plt.fill_between).parameters
+               else {})
+
+plt.figure(figsize=(15,10))
+plt.step(recall, precision, color='navy', alpha=0.7,
+         where='post', label='Baseline Model (AP = %0.3f)' % average_precision)
+plt.fill_between(recall, precision, alpha=0.7, color='navy', **step_kwargs)
+
+plt.step(recall_under, precision_under, color='royalblue', alpha=0.7,
+         where='post', label='Under-Sampled Model (AP = %0.3f)' % average_precision_under)
+plt.fill_between(recall_under, precision_under, alpha=0.7, color='royalblue', **step_kwargs)
+
+plt.xlabel('Recall', size=15)
+plt.ylabel('Precision', size=15)
+plt.ylim([0.0, 1.05])
+plt.xlim([0.0, 1.0])
+plt.title('Precision-Recall Curve', size=25)
+plt.legend()
+plt.show()
 
 
 # ### For this model, the average accuracy score dropped, though the classes are much more balanced. The AUC is similar. This model is better at predicting both classes, which is important. Let's tune the hyper-parameters, to see if we can improve the model further.
@@ -273,7 +462,7 @@ print("Precision",TP / float(TP + FP))
 
 # ### We'll use RandomizedSearchCV for tuning
 
-# In[35]:
+# In[16]:
 
 
 # 70/30 split
@@ -286,7 +475,7 @@ print("Number of rows/columns in X_train_final dataset: ", X_train_final.shape)
 print("Number of rows/columns in y_train_final dataset: ", y_train_final.shape) 
 
 
-# In[44]:
+# In[31]:
 
 
 # Define parameters to be tuned
@@ -295,22 +484,19 @@ from sklearn.model_selection import RandomizedSearchCV
 from pprint import pprint
 
 # Number of trees in RFC
-n_estimators = [int(x) for x in np.linspace(start = 100, stop = 800, num = 8)]
-# Criterion
-criterion = ['gini','entropy']
+n_estimators = [int(x) for x in np.linspace(start = 100, stop = 1000, num = 10)]
 # Number of features to consider at every split
-max_features = ['sqrt',4,5]
+max_features = ['sqrt',2,3,4,5,6,7,8,9,10]
 # Maximum number of levels in tree
 max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
 max_depth.append(None)
 # Minimum number of samples required to split a node
-min_samples_split = [2, 5, 10]
+min_samples_split = [2,3,5,6,8,10]
 # Minimum number of samples required at each leaf node
-min_samples_leaf = [1, 2, 4, 10, 20]
+min_samples_leaf = [1,2,4,6,8,10,20,30,40,50,60]
 # Method of selecting samples for training each tree
 bootstrap = [True, False] # Create the random grid
 random_grid = {'n_estimators': n_estimators,
-               'criterion': criterion,
                'max_features': max_features,
                'max_depth': max_depth,
                'min_samples_split': min_samples_split,
@@ -319,7 +505,7 @@ random_grid = {'n_estimators': n_estimators,
 pprint(random_grid)
 
 
-# In[37]:
+# In[28]:
 
 
 # Use the random grid to search for best hyperparameters
@@ -329,13 +515,13 @@ RFC_hyper = RandomForestClassifier()
 
 # Random search of parameters, using 3 fold cross validation, 
 # Search across 50 different combinations, and use 3 available cores (n_jobs)
-RFC_hyper = RandomizedSearchCV(estimator = RFC_hyper, param_distributions = random_grid, n_iter = 30, cv = 3, 
-                               verbose=1, random_state=42, n_jobs = 3)
+RFC_hyper = RandomizedSearchCV(estimator = RFC_hyper, param_distributions = random_grid, n_iter = 30, cv = 5, 
+                               verbose=1, random_state=42, n_jobs = 2)
 # Fit the random search model
 RFC_hyper.fit(X_train_final, y_train_final)
 
 
-# In[40]:
+# In[27]:
 
 
 # Print the best hyper-parameters
@@ -346,115 +532,201 @@ RFC_hyper.best_params_
 
 # ## Now, we'll adjust the hyper-parameters for the final model
 
-# In[49]:
+# In[18]:
 
 
 # ---FINAL MODEL with hyper-parameters tuned---
 
-RFC_final = RandomForestClassifier(n_estimators=100, min_samples_split=5, min_samples_leaf=2, max_features='sqrt',
-                                   max_depth=10,bootstrap=True, random_state=42)
+RFC_final = RandomForestClassifier(n_estimators=400, min_samples_split=2, min_samples_leaf=1, max_features=5,
+                                   max_depth=10,bootstrap=True, random_state=47, oob_score = True)
 RFC_final.fit(X_train_final, y_train_final)
 y_pred_final = RFC_final.predict(X_test_final)   #yields predicted class 0/1
 probs_final = RFC_final.predict_proba(X_test_final)
 probs_final = probs_final[:,1]    #yields probability of either class 0-1
 
 
-# In[50]:
+# ## Print accuracy reports
 
+# In[19]:
 
-# ---CHECK ACCURACY---
 
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import classification_report, confusion_matrix
-
-print("=== Confusion Matrix ===")
-print(confusion_matrix(y_test_final, y_pred_final))
-print('\n')
-print("=== Classification Report ===")
-print(classification_report(y_test_final, y_pred_final))
-print('\n')
 from sklearn import metrics
-
-# Model Accuracy, how often is the classifier correct?
-print("Accuracy:",metrics.accuracy_score(y_test_final, y_pred_final))
-print("F1_score:",metrics.f1_score(y_test_final, y_pred_final))
-print("Recall_score:",metrics.recall_score(y_test_final, y_pred_final))
-print("AUC score:",metrics.roc_auc_score(y_test_final, probs_final))
-precision, recall, thresholds = metrics.precision_recall_curve(y_test_final, y_pred_final)
+from sklearn.metrics import classification_report, confusion_matrix, recall_score, precision_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import auc
+from sklearn.metrics import average_precision_score
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-plt.plot(recall, precision, marker='.')
-from sklearn.metrics import confusion_matrix
-confusion = confusion_matrix(y_test_final, y_pred_final)
-print(confusion)
+############################################################################################################
+# CLASSIFICATION REPORT ###
 
+print('\n')
+print("=== CLASSIFICATION REPORT ===")
+print(classification_report(y_test_final, y_pred_final))
+print("Accuracy:",metrics.accuracy_score(y_test_final, y_pred_final))
+print("OOB score:", RFC_final.oob_score_)
+print("ROC AUC score:",metrics.roc_auc_score(y_test_final, probs_final))
+
+confusion2 = confusion_matrix(y_test_final, y_pred_final)
 # True Positives
-TP = confusion[1, 1]
+TP_final = confusion2[1, 1]
 # True Negatives
-TN = confusion[0, 0]
+TN_final = confusion2[0, 0]
 # False Positives
-FP = confusion[0, 1]
+FP_final = confusion2[0, 1]
 # False Negatives
-FN = confusion[1, 0]
-print("Sensitivity",TP / float(TP + FN))
-print("Specificity",TN / float(TN + FP))
-print("Precision",TP / float(TP + FP))
+FN_final = confusion2[1, 0]
+print("Sensitivity:",TP_final / float(TP_final + FN_final))
+print("Specificity:",TN_final / float(TN_final + FP_final))
+print("Precision:",TP_final / float(TP_final + FP_final))
 
+#####################################################################################################
+# CONFUSION MATRIX
 
-# ### We can see that by tuning the hyper-parameters, we were able to increase average accuracy from 70 to 73% and increased AUC from .76 to .81. 
-# 
-# ### Confusion matrix shows that:
-# #### True positive:    33615     _(We predicted a positive result and it was positive)_
-# #### True negative:    29060     _(We predicted a negative result and it was negative)_
-# #### False positive:   9090      _(We predicted a positive result and it was negative)_
-# #### False negative:   13843     _(We predicted a negative result and it was positive)_
-# 
-# ### So, this model makes more correct predictions, than not and the false negative rate seems a bit higher than the false positive
+print('\n')
+import itertools
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion Matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    Source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+    """
 
-# ## Now, let's run a ROC plot and get the area under the curve score (AUC)
+    # Plot the confusion matrix
+    plt.figure(figsize = (8, 8))
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title, size = 25)
+    plt.colorbar(aspect=5)
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45, size = 12)
+    plt.yticks(tick_marks, classes, size = 12)
 
-# In[51]:
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    
+    # Labeling the plot
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt), fontsize = 20,
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+        
+    plt.grid(False)
+    plt.tight_layout()
+    plt.ylabel('Actual label', size = 15)
+    plt.xlabel('Predicted label', size = 15)
+    plt.ylim([1.5, -.5])
 
+cm = confusion_matrix(y_test_final, y_pred_final)
+plot_confusion_matrix(cm, classes = ['Good Mental Health', 'Poor Mental Health'],
+                      title = 'Confusion Matrix')
+plt.show()
 
-roc_auc = roc_auc_score(y_test_final, probs_final)
-fpr, tpr, thresholds = roc_curve(y_test_final, probs_final)
-plt.figure(figsize=(20,10))
-plt.plot(fpr, tpr, label='Random Forest Classifier (area = %0.3f)' % roc_auc)
+############################################################################################
+# ROC CURVE PLOT
+
+roc_auc_final = roc_auc_score(y_test_final, probs_final)
+fpr_final, tpr_final, thresholds = roc_curve(y_test_final, probs_final)
+plt.figure(figsize=(15,10))
+plt.plot(fpr, tpr, label='Baseline Model (AUC = %0.3f)' % roc_auc, color='midnightblue')
+#plt.fill_between(fpr, tpr, alpha=0.2, color='orange', **step_kwargs)
+plt.plot(fpr_under, tpr_under, label='Under-Sampled Model (AUC = %0.3f)' % roc_auc_under, color='royalblue')
+#plt.fill_between(fpr_final, tpr_final, alpha=0.2, color='red', **step_kwargs)
+plt.plot(fpr_final, tpr_final, label='Final Model (AUC = %0.3f)' % roc_auc_final, color='lightsteelblue')
+#plt.fill_between(fpr_final, tpr_final, alpha=0.2, color='navy', **step_kwargs)
 plt.plot([0, 1], [0, 1],'r--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver Operating Characteristic')
+plt.xlabel('False Positive Rate', size = 15)
+plt.ylabel('True Positive Rate', size = 15)
+plt.title('Receiver Operating Characteristic (ROC Curve)', size = 25)
 plt.legend(loc="lower right")
 plt.savefig('ROC')
 plt.show()
-print('AUC: %.3f' % roc_auc)
+
+###########################################################################################
+# PRECISION-RECALL CURVE
+
+from sklearn.metrics import precision_recall_curve
+import matplotlib.pyplot as plt
+from inspect import signature
+from sklearn.metrics import average_precision_score
+
+average_precision_final = average_precision_score(y_test_final, probs_final)
+
+precision_final, recall_final, _ = precision_recall_curve(y_test_final, probs_final)
+
+step_kwargs = ({'step': 'post'}
+               if 'step' in signature(plt.fill_between).parameters
+               else {})
+
+plt.figure(figsize=(15,10))
+plt.step(recall, precision, color='navy', alpha=1,
+         where='post', label='Baseline Model (AP = %0.3f)' % average_precision)
+plt.fill_between(recall, precision, alpha=0.7, color='navy', **step_kwargs)
+
+plt.step(recall_under, precision_under, color='royalblue', alpha=1,
+         where='post', label='Under-Sampled Model (AP = %0.3f)' % average_precision_under)
+plt.fill_between(recall_under, precision_under, alpha=0.7, color='royalblue', **step_kwargs)
+
+plt.step(recall_final, precision_final, color='lightsteelblue', alpha=1,
+         where='post', label='Final Model (AP = %0.3f)' % average_precision_final)
+plt.fill_between(recall_final, precision_final, alpha=0.7, color='lightsteelblue', **step_kwargs)
+
+plt.xlabel('Recall', size=15)
+plt.ylabel('Precision', size=15)
+plt.ylim([0.0, 1.05])
+plt.xlim([0.0, 1.0])
+plt.title('Precision-Recall Curve', size=25)
+plt.legend()
+plt.show()
 
 
-# In[53]:
+# ### We can see that by tuning the hyper-parameters, we were able to increase average accuracy from 70 to 73% and increased AUC from .76 to .81. 
+
+# In[21]:
 
 
+######################################################################################################
+# RFC STATS
+n_nodes = []
+max_depths = []
+
+for ind_tree in RFC_final.estimators_:
+    n_nodes.append(ind_tree.tree_.node_count)
+    max_depths.append(ind_tree.tree_.max_depth)
+
+print('\n')    
+print("=== RFC STATS ===")   
+print(f'OOB score:', RFC_final.oob_score_)
+print(f'Average number of nodes: {int(np.mean(n_nodes))}')
+print(f'Average maximum depth: {int(np.mean(max_depths))}')
+print(f'Average Sample Split: {int(np.mean(min_samples_split))}')
+print(f'Average Samples Leaf: {int(np.mean(min_samples_leaf))}')
+
+#####################################################################################################
+# FEATURE IMPORTANCE GRAPH
+
+feature_names = LLCP2.columns # to label features by name, not index
 importances = RFC_final.feature_importances_
 std = np.std([tree.feature_importances_ for tree in RFC_final.estimators_],
              axis=0)
-indices = np.argsort(importances)[::-1]
+indices = np.argsort(importances)
 
-# Print the feature ranking
-print("Feature ranking:")
-for f in range(X.shape[1]):
-    print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-    
 # Plot the feature importances of the forest
-plt.figure(figsize=(12,8))
-plt.title("Visualizing Important Features")
-plt.ylabel('Feature Importance Score')
-plt.xlabel('Features')
-plt.bar(range(X.shape[1]), importances[indices],
-       color="r", yerr=std[indices], align="center")
-plt.xticks(range(X.shape[1]), indices)
-plt.xlim([-1, X.shape[1]])
+plt.figure(figsize=(20,15))
+plt.title("Feature Importances", Size=25)
+plt.xlabel('Feature Importance Score', size=20)
+plt.ylabel('Features', size=20)
+plt.barh(range(X.shape[1]), importances[indices],
+       color="royalblue", xerr=std[indices], align="center")
+# To define own labels
+plt.yticks(range(X.shape[1]), [feature_names[i] for i in indices])
+plt.ylim([-1, X.shape[1]])
 plt.show()
 
 
