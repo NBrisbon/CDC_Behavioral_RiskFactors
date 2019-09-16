@@ -1,4 +1,4 @@
-# Predicting Mental Health Problems
+# Predicting Need for Mental Health Services
 
 ![Mental Health](behavioral-health-vs-mental-health.png)
 
